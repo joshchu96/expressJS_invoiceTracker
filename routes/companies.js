@@ -20,6 +20,21 @@ router.post("/", async(request, response) => {
     const { code, name, description } = request.body;
     const result = await db.query('INSERT INTO companies (code, name, description) VALUES ($1, $2, $3) RETURNING *', [code, name, description]);
     return response.json({ company: result.rows[0] });
+});
+
+//PUT: edit existing company. Should return 404 if not found. 
+router.patch("/:code", async(request, response) => {
+    const {code} = request.params;
+    const { name, description } = request.body;
+    const result = await db.query('UPDATE companies SET name=$1, description=$2 WHERE code=$3 RETURNING *', [name, description, code]);
+    return response.json({ company: result.rows[0] });
+})
+
+//DELETE: deletes company. Return 404 if company not found.
+router.delete("/:code", async(request, response) => {
+    const {code} = request.params;
+    await db.query('DELETE FROM companies WHERE code = $1', [code]);
+    return response.json({ status: "deleted" });
 })
 
 module.exports = router;
