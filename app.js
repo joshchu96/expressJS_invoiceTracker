@@ -2,17 +2,21 @@
 const express = require("express");
 
 const app = express();
-const ExpressError = require("./expressError")
-const companiesRouter = require('./routes/companies');
+const ExpressError = require("./expressError");
+const companiesRouter = require("./routes/companies");
+const invoicesRouter = require("./routes/invoices");
 
 app.use(express.json()); //middleware parser for json data
 
 //companies route
 app.use("/companies", companiesRouter);
 
+//invoices route
+app.use("/invoices", invoicesRouter);
+
 /** 404 handler */
 
-app.use(function(req, res, next) {
+app.use(function (req, res, next) {
   const err = new ExpressError("Not Found", 404);
   return next(err);
 });
@@ -24,9 +28,7 @@ app.use((err, req, res, next) => {
 
   return res.json({
     error: err,
-    message: err.message
   });
 });
-
 
 module.exports = app;
