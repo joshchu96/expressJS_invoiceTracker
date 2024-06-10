@@ -93,9 +93,10 @@ router.delete("/:id", async (request, response, next) => {
 // GET: Return a company and its invoices based on company code
 router.get("/:code", async (request, response, next) => {
   try {
-    const code = "apple";
+    const { code } = request.params;
 
     // Query to fetch company and its invoices
+
     const results = await db.query(
       `SELECT 
         companies.code, 
