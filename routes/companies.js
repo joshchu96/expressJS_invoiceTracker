@@ -71,14 +71,6 @@ router.delete("/:code", async (request, response, next) => {
   }
 });
 
-//GET companies info JOINED with invoices.
-router.get("/:code", async (request, response, next) => {
-  const { code } = request.params;
-  const results = await db.query(
-    "SELECT companies.code, companies.name, companies.description, invoices.id AS invoices_id, invoices.amt AS invoices_amt, invoices.paid AS invoices_paid, invoices.add_date AS invoices_add_date, invoices.paid_date AS invoices_paid_date FROM companies JOIN invoices ON companies.code = invoices.comp_code WHERE companies.code = $1 RETURNING *",
-    [code]
-  );
-  response.json(results.rows[0]);
-});
+
 
 module.exports = router;

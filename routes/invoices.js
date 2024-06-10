@@ -91,48 +91,23 @@ router.delete("/:id", async (request, response, next) => {
 });
 
 // GET: Return a company and its invoices based on company code
-router.get("/:code", async (request, response, next) => {
+router.get("/test/:code", async (request, response, next) => {
+  const { code } = request.params;
   try {
-    const { code } = request.params;
-
-    // Query to fetch company and its invoices
-
-    const results = await db.query(
-      `SELECT 
-        companies.code, 
-        companies.name, 
-        companies.description, 
-        invoices.id AS invoice_id
-      FROM 
-        companies 
-      LEFT JOIN 
-        invoices 
-      ON 
-        companies.code = invoices.comp_code 
-      WHERE 
-        companies.code = $1::text`,
+    const companyRes = await db.query(
+      "SELECT * FROM companies WHERE code = $1",
       [code]
     );
 
-    // If no rows are returned, the company does not exist
-    if (results.rows.length === 0) {
-      throw new ExpressError("Company not found", 404);
-    }
-
-    // Extract company details from the first row
-    const companyDetails = results.rows[0];
-    const company = {
-      code: companyDetails.code,
-      name: companyDetails.name,
-      description: companyDetails.description,
-      invoices: results.rows
-        .filter((row) => row.invoice_id !== null)
-        .map((row) => row.invoice_id),
-    };
-
-    return response.json({ company });
+    const invoicesRes = await db.query(
+      "SELECT * FROM invoices WHERE comp_code = $1",
+      [code]
+    );
+    const company = companyRes.rows[0];
+    company.invoices = invoicesRes.rows;
+    response.json(company);
   } catch (error) {
-    next(error);
+    return next(error);
   }
 });
 
