@@ -73,4 +73,66 @@ router.put("/:id", async (request, response, next) => {
   }
 });
 
+//DELETE: remove existing invoice and handle error with 404 if invoice not found
+router.delete("/:id", async (request, response, next) => {
+  try {
+    const { id } = request.params;
+    const results = await db.query(
+      "DELETE FROM invoices WHERE id=$1 RETURNING *",
+      [id]
+    );
+    if (results.rows.length === 0) {
+      throw new ExpressError("Invoice not found", 404);
+    }
+    return response.json({ status: "deleted" });
+  } catch (error) {
+    next(error);
+  }
+});
+
+// GET: Return a company and its invoices based on company code
+router.get("/:code", async (request, response, next) => {
+  try {
+    const code = "apple";
+
+    // Query to fetch company and its invoices
+    const results = await db.query(
+      `SELECT 
+        companies.code, 
+        companies.name, 
+        companies.description, 
+        invoices.id AS invoice_id
+      FROM 
+        companies 
+      LEFT JOIN 
+        invoices 
+      ON 
+        companies.code = invoices.comp_code 
+      WHERE 
+        companies.code = $1::text`,
+      [code]
+    );
+
+    // If no rows are returned, the company does not exist
+    if (results.rows.length === 0) {
+      throw new ExpressError("Company not found", 404);
+    }
+
+    // Extract company details from the first row
+    const companyDetails = results.rows[0];
+    const company = {
+      code: companyDetails.code,
+      name: companyDetails.name,
+      description: companyDetails.description,
+      invoices: results.rows
+        .filter((row) => row.invoice_id !== null)
+        .map((row) => row.invoice_id),
+    };
+
+    return response.json({ company });
+  } catch (error) {
+    next(error);
+  }
+});
+
 module.exports = router;

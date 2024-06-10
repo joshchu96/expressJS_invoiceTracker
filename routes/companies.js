@@ -56,10 +56,10 @@ router.put("/:code", async (request, response, next) => {
 });
 
 //DELETE: deletes company. Return 404 if company not found.
-router.delete("/:code", async (request, response) => {
+router.delete("/:code", async (request, response, next) => {
   try {
     const { code } = request.params;
-    await db.query("DELETE FROM companies WHERE code = $1", [code]);
+    await db.query("DELETE FROM companies WHERE code = $1 RETURNING *", [code]);
 
     if (result.rows.length === 0) {
       throw new ExpressError("Company not found", 404);
@@ -69,6 +69,16 @@ router.delete("/:code", async (request, response) => {
   } catch (error) {
     return next(error);
   }
+});
+
+//GET companies info JOINED with invoices.
+router.get("/:code", async (request, response, next) => {
+  const { code } = request.params;
+  const results = await db.query(
+    "SELECT companies.code, companies.name, companies.description, invoices.id AS invoices_id, invoices.amt AS invoices_amt, invoices.paid AS invoices_paid, invoices.add_date AS invoices_add_date, invoices.paid_date AS invoices_paid_date FROM companies JOIN invoices ON companies.code = invoices.comp_code WHERE companies.code = $1 RETURNING *",
+    [code]
+  );
+  response.json(results.rows[0]);
 });
 
 module.exports = router;
