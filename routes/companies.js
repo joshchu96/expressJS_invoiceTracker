@@ -1,6 +1,7 @@
 const router = require("express").Router();
 const db = require("../db");
 const ExpressError = require("../expressError");
+const slugify = require("slugify");
 
 //GET: return list of companies
 router.get("/", async (request, response) => {
@@ -28,7 +29,9 @@ router.get("/:code", async (request, response, next) => {
 
 //POST: adds a company. Given a json like {code, name, desc}
 router.post("/", async (request, response) => {
-  const { code, name, description } = request.body;
+  let { code, name, description } = request.body;
+  code = slugify(code, { lower: true });
+
   const result = await db.query(
     "INSERT INTO companies (code, name, description) VALUES ($1, $2, $3) RETURNING *",
     [code, name, description]
@@ -70,7 +73,5 @@ router.delete("/:code", async (request, response, next) => {
     return next(error);
   }
 });
-
-
 
 module.exports = router;
